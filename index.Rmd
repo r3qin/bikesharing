@@ -1,6 +1,6 @@
 --- 
 title: "Bike Sharing Analysis"
-author: "Yuzheng Jia, Rui Qin, Yiwen Cai"
+author: "Rui Qin"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 ---
