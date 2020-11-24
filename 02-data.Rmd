@@ -1,2 +1,7 @@
-# Data sources
+# Data Sources
+As we find our common interests in transportation systems, we notice that unlike public transportation systems such as bus and subway, bike sharing systems have explicitly recorded statististics like the duration of travel, departure and arrival position. Therefore, we searched online for data related to bike rental. The dataset we decide to work on can be found on http://capitalbikeshare.com/system-data. Then, weather conditions and holiday schedules are collected from https://www.ncdc.noaa.gov/ and http://dchr.dc.gov/page/holiday-schedule to fill the corresponding weather and seasonal information for each record.
 
+# Data Transformation
+All the data we found is in csv files. They can be imported by R using read.csv() function. The bike sharing data contains variables start time and end time including date and time. Since we are interested in bike riding patterns hourly, we split the variables into start date, start time, end date, and end time. We suppose that weather affects bike sharing. Hence by using left_join() function in the dplyr package we decide to merge data sets of bike sharing and weather. Finally, it is important to check if the bike sharing happened on work days or not by adding variables: day of week and holidays.
+
+# Missing Values
