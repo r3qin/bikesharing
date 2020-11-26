@@ -1,2 +1,51 @@
 # Data transformation
 All the data we found is in csv files. They can be imported by R using read.csv() function. The bike sharing data contains variables start time and end time including date and time. Since we are interested in bike riding patterns hourly, we split the variables into start date, start time, end date, and end time. We suppose that weather affects bike sharing. Hence by using left_join() function in the dplyr package we decide to merge data sets of bike sharing and weather. Finally, it is important to check if the bike sharing happened on work days or not by adding variables: day of week and holidays.
+
+```{r}
+library(dplyr)
+library(purrr)
+library(prob)
+```
+
+```{r}
+# read bike sharing data
+# select variables: duration, start date, end date, member type
+df_11 = read.csv("data/2011-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
+df_12Q1 = read.csv("data/2012Q1-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
+df_12Q2 = read.csv("data/2012Q2-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
+df_12Q3 = read.csv("data/2012Q3-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
+df_12Q4 = read.csv("data/2012Q4-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
+
+# combine data into one data frame
+df = rbind(df_11, df_12Q1, df_12Q2, df_12Q3, df_12Q4)
+
+# create variables regarding date and time
+df$start_date = unlist(map(strsplit(df$Start.date, " "), 1))
+df$start_time = unlist(map(strsplit(df$Start.date, " "), 2))
+df$end_date = unlist(map(strsplit(df$End.date, " "), 1))
+df$end_time = unlist(map(strsplit(df$End.date, " "), 2))
+df = df %>% select(c(1, 4, 5, 6, 7, 8))
+
+# read temperature data
+# change date format
+temp = read.csv("data/temp.csv")
+temp$DATE = format(strptime(as.character(temp$DATE), "%m/%d/%Y"), "%Y-%m-%d")
+
+# merge two data frames on date
+df = left_join(df, temp, by = c("start_date" = "DATE"))
+
+# add the variable: day of week
+df$weekday = weekdays(as.Date(df$start_date, "%Y-%m-%d"))
+
+# holidays of 2011 and 2012
+holidays = c("2011-01-17", "2011-02-21", "2011-04-15", "2011-05-30",
+             "2011-07-04", "2011-09-05", "2011-10-10", "2011-11-11", 
+             "2011-11-24", "2011-12-26", "2012-01-02", "2012-01-16", 
+             "2012-02-20", "2012-04-16", "2012-05-28", "2012-07-04", 
+             "2012-09-03", "2012-10-08", "2012-11-12", "2012-11-22", 
+             "2012-12-25")
+
+# add a variable to check if the bike sharing happened on a holiday
+df$holidays = df$start_date %in% holidays
+```
+
