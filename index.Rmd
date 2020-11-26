@@ -6,14 +6,3 @@ site: bookdown::bookdown_site
 ---
 
 # Introduction
-
-
-# Data sources
-
-
-# Data transformation
-
-
-# Results
-
-
