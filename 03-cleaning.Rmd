@@ -23,9 +23,13 @@ df = rbind(df_11, df_12Q1, df_12Q2, df_12Q3, df_12Q4)
 # create variables regarding date and time
 df$start_date = unlist(map(strsplit(df$Start.date, " "), 1))
 df$start_time = unlist(map(strsplit(df$Start.date, " "), 2))
+df$start_hour = unlist(map(strsplit(df$start_time, ":"), 1))
+df$start_minute = unlist(map(strsplit(df$start_time, ":"), 2))
 df$end_date = unlist(map(strsplit(df$End.date, " "), 1))
 df$end_time = unlist(map(strsplit(df$End.date, " "), 2))
-df = df %>% select(c(1, 4, 5, 6, 7, 8))
+df$end_hour = unlist(map(strsplit(df$end_time, ":"), 1))
+df$end_minute = unlist(map(strsplit(df$end_time, ":"), 2))
+df = df %>% select(!c("Start.date", "End.date", "start_time", "end_time"))
 
 # read temperature data
 # change date format
@@ -49,6 +53,13 @@ holidays = c("2011-01-17", "2011-02-21", "2011-04-15", "2011-05-30",
 # add a variable to check if the bike sharing happened on a workday
 df$holidays = df$start_date %in% holidays
 df$workdays = !(df$weekday %in% c("Saturday", "Sunday") | df$holidays)
+df$workdays = recode_factor(as.factor(df$workdays), "TRUE" = "Workdays", "FALSE" = "Non-workdays")
 df = df %>% select(!c("weekday", "holidays"))
 ```
+
+```{r}
+df
+```
+
+
 

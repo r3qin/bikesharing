@@ -6,6 +6,10 @@ df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_d
   geom_histogram() + 
   facet_wrap(~Member.type)
 ```
+```{r}
+df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date) %>% count() %>% ggplot(aes(x=Member.type, y=n)) +
+  geom_boxplot()
+```
 
 
 ```{r}
@@ -22,4 +26,18 @@ df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(workdays, Member.typ
   geom_histogram() + 
   facet_wrap(~workdays+Member.type)
 ```
+
+
+The average number of riders for each hour of the day for the casual and registered riders
+```{r}
+df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_hour) %>% count() %>% ggplot(aes(x=start_hour, y=n/24)) +
+  geom_bar(stat="identity") +
+  facet_wrap(.~Member.type)
+```
+Weather
+```{r}
+df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date, TMAX) %>% count() %>% ggplot(aes(x=TMAX, y=n, color=Member.type)) +
+  geom_point()
+```
+
 
