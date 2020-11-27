@@ -1,1 +1,25 @@
 # Results
+
+the daily counts of casual and registered riders
+```{r}
+df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date) %>% count() %>% ggplot(aes(n)) + 
+  geom_histogram() + 
+  facet_wrap(~Member.type)
+```
+
+
+```{r}
+df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date) %>% count() %>% ggplot(aes(x=n, y=Member.type)) +
+  geom_density_ridges()
+```
+```{r}
+member = df[df$Member.type == "Member",] %>% group_by(start_date) %>% count() %>% ungroup() %>% .$n
+casual = df[df$Member.type == "Casual",] %>% group_by(start_date) %>% count() %>% ungroup() %>% .$n
+ks.test(x=member, y=casual)
+```
+```{r}
+df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(workdays, Member.type, start_date) %>% count() %>% ggplot(aes(n)) + 
+  geom_histogram() + 
+  facet_wrap(~workdays+Member.type)
+```
+
