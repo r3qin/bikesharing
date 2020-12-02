@@ -6,20 +6,44 @@ library(dplyr)
 library(purrr)
 library(prob)
 library(ggplot2)
+library(ggridges)
 ```
 
 ```{r}
-# read bike sharing data
-# select variables: duration, start date, end date, member type
-df_11 = read.csv("data/2011-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
-df_12Q1 = read.csv("data/2012Q1-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
-df_12Q2 = read.csv("data/2012Q2-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
-df_12Q3 = read.csv("data/2012Q3-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
-df_12Q4 = read.csv("data/2012Q4-capitalbikeshare-tripdata.csv") %>% select(c(1, 2, 3, 9))
+# download bike sharing data
+if (!file.exists("data")) {
+  dir.create(file.path(getwd(), "data"))
+}
+address = "https://s3.amazonaws.com/capitalbikeshare-data/201801-capitalbikeshare-tripdata.zip"
+download.file(address, file.path("data", basename(address)))
+f = unzip(file.path("data", basename(address)), "201801_capitalbikeshare_tripdata.csv", exdir=file.path("data"))
+df = read.csv(f)
 
-# combine data into one data frame
-df = rbind(df_11, df_12Q1, df_12Q2, df_12Q3, df_12Q4)
+address = "https://s3.amazonaws.com/capitalbikeshare-data/201907-capitalbikeshare-tripdata.zip"
+download.file(address, file.path("data", basename(address)))
+unzip(file.path("data", basename(address)), "201907-capitalbikeshare-tripdata", exdir=file.path("data"))
+file.rename(file.path("data", "201907-capitalbikeshare-tripdata"), file.path("data", "201907-capitalbikeshare-tripdata.csv"))
+df = rbind(df, read.csv("data/201907-capitalbikeshare-tripdata.csv"))
+for (y in c("2018", "2019")) {
+  for (m in 1:12) {
+    if (y == "2018" && m == 1) {
+      next
+    }
+    if (y == "2019" && m == 7) {
+      next
+    }
+    address = sprintf("https://s3.amazonaws.com/capitalbikeshare-data/%s%02d-capitalbikeshare-tripdata.zip", y,m)
+    download.file(address, file.path("data", basename(address)))
+    f = unzip(file.path("data", basename(address)), gsub(".zip", ".csv", basename(address)), exdir=file.path("data"))
+    df = rbind(df, read.csv(f))
+  }
+}
 
+df = df %>% select(c(1, 2, 3, 9))
+```
+
+
+```{r}
 # create variables regarding date and time
 df$start_date = unlist(map(strsplit(df$Start.date, " "), 1))
 df$start_time = unlist(map(strsplit(df$Start.date, " "), 2))
@@ -33,7 +57,7 @@ df = df %>% select(!c("Start.date", "End.date", "start_time", "end_time"))
 
 # read temperature data
 # change date format
-temp = read.csv("data/temp.csv")
+temp = read.csv("temp_data/temp.csv")
 temp$DATE = format(strptime(as.character(temp$DATE), "%m/%d/%Y"), "%Y-%m-%d")
 
 # merge two data frames on date
@@ -43,12 +67,10 @@ df = left_join(df, temp, by = c("start_date" = "DATE"))
 df$weekday = weekdays(as.Date(df$start_date, "%Y-%m-%d"))
 
 # holidays of 2011 and 2012
-holidays = c("2011-01-17", "2011-02-21", "2011-04-15", "2011-05-30",
-             "2011-07-04", "2011-09-05", "2011-10-10", "2011-11-11", 
-             "2011-11-24", "2011-12-26", "2012-01-02", "2012-01-16", 
-             "2012-02-20", "2012-04-16", "2012-05-28", "2012-07-04", 
-             "2012-09-03", "2012-10-08", "2012-11-12", "2012-11-22", 
-             "2012-12-25")
+holidays = c("2018-01-01", "2018-01-15", "2018-02-19", "2018-04-16", "2018-05-28", "2018-07-04",
+             "2018-09-03", "2018-10-08", "2018-11-12", "2018-11-22", "2018-12-25", "2019-01-01",
+             "2019-01-21", "2019-02-18", "2019-04-13", "2019-05-27", "2019-07-04", "2019-09-02",
+             "2019-10-14", "2019-11-11", "2019-11-28", "2019-12-25")
 
 # add a variable to check if the bike sharing happened on a workday
 df$holidays = df$start_date %in% holidays

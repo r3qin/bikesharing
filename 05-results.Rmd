@@ -36,8 +36,11 @@ df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_h
 ```
 Weather
 ```{r}
-df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date, TMAX) %>% count() %>% ggplot(aes(x=TMAX, y=n, color=Member.type)) +
+df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date, TAVG) %>% count() %>% ggplot(aes(x=TAVG, y=n, color=Member.type)) +
   geom_point()
+```
+```{r}
+head(df)
 ```
 
 
