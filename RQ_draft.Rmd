@@ -1,16 +1,9 @@
-# Data transformation
-All the data we found is in csv files. They can be imported by R using read.csv() function. The bike sharing data contains variables start time and end time including date and time. Since we are interested in bike riding patterns hourly, we split the variables into start date, start time, end date, and end time. We suppose that weather affects bike sharing. Hence by using left_join() function in the dplyr package we decide to merge data sets of bike sharing and weather. Finally, it is important to check if the bike sharing happened on work days or not by adding variables: day of week and holidays.
-
-```{r}
-library(dplyr)
-library(purrr)
-library(prob)
-library(ggplot2)
-library(ggridges)
-library(tidyverse)
-library(lubridate)
-```
-
+---
+title: "RQ_draft"
+author: "Rui Qin"
+date: "12/2/2020"
+output: html_document
+---
 ```{r}
 # download bike sharing data
 if (!file.exists("data")) {
@@ -41,21 +34,27 @@ for (y in c("2018", "2019")) {
   }
 }
 
+# drop unnecessary variables
 df = df %>% select(c(1, 2, 3, 9))
-```
 
-
-```{r}
 # create variables regarding date and time
-df$start_date = unlist(map(strsplit(df$Start.date, " "), 1))
-df$start_time = unlist(map(strsplit(df$Start.date, " "), 2))
-df$start_hour = unlist(map(strsplit(df$start_time, ":"), 1))
-df$start_minute = unlist(map(strsplit(df$start_time, ":"), 2))
-df$end_date = unlist(map(strsplit(df$End.date, " "), 1))
-df$end_time = unlist(map(strsplit(df$End.date, " "), 2))
-df$end_hour = unlist(map(strsplit(df$end_time, ":"), 1))
-df$end_minute = unlist(map(strsplit(df$end_time, ":"), 2))
-df = df %>% select(!c("Start.date", "End.date", "start_time", "end_time"))
+t_start = strptime(as.character(df$Start.date), "%Y-%m-%d %H:%M:%S")
+t_end = strptime(as.character(df$End.date), "%Y-%m-%d %H:%M:%S")
+df$start_date = as.character(date(t_start))
+df$start_year = year(t_start)
+df$start_month = month(t_start, label = TRUE)
+df$start_day = day(t_start)
+df$start_hour = hour(t_start)
+df$start_minute = minute(t_start)
+df$start_second = second(t_start)
+df$end_date = as.character(date(t_end))
+df$end_year = year(t_end)
+df$end_month = month(t_end, label = TRUE)
+df$end_day = day(t_end)
+df$end_hour = hour(t_end)
+df$end_minute = minute(t_end)
+df$end_second = second(t_end)
+#df = df %>% select(!c("Start.date", "End.date"))
 
 # read temperature data
 # change date format
@@ -81,4 +80,54 @@ df$workdays = recode_factor(as.factor(df$workdays), "TRUE" = "Workdays", "FALSE"
 df = df %>% select(!c("weekday", "holidays"))
 ```
 
+
+```{r}
+df %>% 
+  group_by(start_hour) %>% 
+  count() %>% 
+  mutate(Time = factor(sprintf("%s:00",start_hour))) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  ggplot(aes(x=Time, y=n/24)) +
+    geom_bar(stat="identity") +
+    ylab("Number of riders") +
+    coord_flip()
+```
+
+
+```{r}
+df[df$Member.type %in% c("Member", "Casual"),] %>% 
+  group_by(Member.type, start_hour) %>% 
+  count() %>% 
+  mutate(Time = factor(sprintf("%s:00",start_hour))) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  ggplot(aes(x=Time, y=n/24)) +
+    geom_bar(stat="identity") +
+    facet_wrap(.~Member.type) +
+    ylab("Number of riders") +
+    coord_flip()
+```
+```{r}
+df[df$Member.type %in% c("Member", "Casual"),] %>% 
+  group_by(Member.type, start_hour) %>% 
+  count() %>% 
+  mutate(Time = factor(sprintf("%s:00",start_hour))) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  mutate(n = ifelse(Member.type == "Member", n, -n)) %>%
+  ggplot(aes(x=Time, y=n/24, fill=Member.type)) + 
+    geom_bar(stat="identity") +
+    coord_flip() +
+    scale_y_continuous(name = "Number of riders", 
+                       breaks = seq(-5000,30000,5000), 
+                       limits = c(-5000, 30000),
+                       labels = abs(seq(-5000,30000,5000)))
+```
+
+```{r}
+df %>%
+  group_by(start_month) %>%
+  count() %>%
+  ggplot(aes(start_month, n/2)) +
+  geom_bar(stat="identity") +
+  xlab("Month")
+```
 
