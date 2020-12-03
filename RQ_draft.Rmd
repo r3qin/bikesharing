@@ -54,7 +54,7 @@ df$end_day = day(t_end)
 df$end_hour = hour(t_end)
 df$end_minute = minute(t_end)
 df$end_second = second(t_end)
-#df = df %>% select(!c("Start.date", "End.date"))
+df = df %>% select(!c("Start.date", "End.date"))
 
 # read temperature data
 # change date format
@@ -78,6 +78,12 @@ df$holidays = df$start_date %in% holidays
 df$workdays = !(df$weekday %in% c("Saturday", "Sunday") | df$holidays)
 df$workdays = recode_factor(as.factor(df$workdays), "TRUE" = "Workdays", "FALSE" = "Non-workdays")
 df = df %>% select(!c("weekday", "holidays"))
+```
+
+```{r}
+df_2 = df %>% 
+  group_by(start_year, start_month, start_day, start_hour, PRCP, SNOW, SNWD, TAVG, TMAX, TMIN, workdays, Member.type) %>%
+  count("num")
 ```
 
 
