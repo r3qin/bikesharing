@@ -104,4 +104,72 @@ df %>%
                        labels = abs(seq(-250,1000,250)))
 ```
 
+```{r}
+df %>% 
+  group_by(Month, Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  dplyr::filter(Month == "Jan") %>%
+  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  mutate(num = ifelse(Member.type == "Member", num, -num)) %>%
+  ggplot(aes(x=Time, y=num, fill=Member.type)) + 
+    geom_bar(stat="identity") +
+    coord_flip() +
+    scale_y_continuous(name = "Number of riders", 
+                       breaks = seq(-250,1000,250), 
+                       limits = c(-250, 1000),
+                       labels = abs(seq(-250,1000,250)))
+```
+
+
+```{r}
+df %>% 
+  group_by(Month, Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  dplyr::filter(Month == "Aug") %>%
+  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  mutate(num = ifelse(Member.type == "Member", num, -num)) %>%
+  ggplot(aes(x=Time, y=num, fill=Member.type)) + 
+    geom_bar(stat="identity") +
+    coord_flip() +
+    scale_y_continuous(name = "Number of riders", 
+                       breaks = seq(-250,1250,250), 
+                       limits = c(-250, 1250),
+                       labels = abs(seq(-250,1250,250)))
+```
+
+```{r}
+df %>% 
+  group_by(Month, Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  dplyr::filter(Month == "Mar") %>%
+  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  mutate(num = ifelse(Member.type == "Member", num, -num)) %>%
+  ggplot(aes(x=Time, y=num, fill=Member.type)) + 
+    geom_bar(stat="identity") +
+    coord_flip() +
+    scale_y_continuous(name = "Number of riders", 
+                       breaks = seq(-250,1000,250), 
+                       limits = c(-250, 1000),
+                       labels = abs(seq(-250,1000,250)))
+```
+
+```{r}
+df %>% 
+  group_by(Month, Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  dplyr::filter(Month == "Jul") %>%
+  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  mutate(num = ifelse(Member.type == "Member", num, -num)) %>%
+  ggplot(aes(x=Time, y=num, fill=Member.type)) + 
+    geom_bar(stat="identity") +
+    coord_flip() +
+    scale_y_continuous(name = "Number of riders", 
+                       breaks = seq(-250,1000,250), 
+                       limits = c(-250, 1000),
+                       labels = abs(seq(-250,1000,250)))
+```
 
