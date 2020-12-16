@@ -4,67 +4,6 @@ author: "Rui Qin"
 date: "12/2/2020"
 output: html_document
 ---
-```{r}
-# download bike sharing data
-if (!file.exists("data")) {
-  dir.create(file.path(getwd(), "data"))
-}
-
-address = "https://s3.amazonaws.com/capitalbikeshare-data/201907-capitalbikeshare-tripdata.zip"
-download.file(address, file.path("data", basename(address)))
-unzip(file.path("data", basename(address)), "201907-capitalbikeshare-tripdata", exdir=file.path("data"))
-file.rename(file.path("data", "201907-capitalbikeshare-tripdata"), file.path("data", "201907-capitalbikeshare-tripdata.csv"))
-df = read.csv("data/201907-capitalbikeshare-tripdata.csv")
-
-for (m in 1:12) {
-  if (m == 7) {
-    next
-  }
-  address = sprintf("https://s3.amazonaws.com/capitalbikeshare-data/2019%02d-capitalbikeshare-tripdata.zip",m)
-  download.file(address, file.path("data", basename(address)))
-  f = unzip(file.path("data", basename(address)), gsub(".zip", ".csv", basename(address)), exdir=file.path("data"))
-  df = rbind(df, read.csv(f))
-}
-
-
-# drop unnecessary variables
-df = df %>% select(c(1, 2, 3, 9))
-
-# create variables regarding date and time
-t_start = strptime(as.character(df$Start.date), "%Y-%m-%d %H:%M:%S")
-df$start_date = as.character(date(t_start))
-df$Year = year(t_start)
-df$Month = month(t_start, label = TRUE)
-df$Day = day(t_start)
-df$Hour = hour(t_start)
-df = df %>% select(!c("Start.date", "End.date"))
-
-# read temperature data
-# change date format
-temp = read.csv("temp_data/temp.csv")
-temp$DATE = format(strptime(as.character(temp$DATE), "%m/%d/%Y"), "%Y-%m-%d")
-
-# merge two data frames on date
-df = left_join(df, temp, by = c("start_date" = "DATE"))
-
-# add the variable: day of week
-df$weekday = weekdays(as.Date(df$start_date, "%Y-%m-%d"))
-
-# holidays of 2011 and 2012
-holidays = c("2019-01-01","2019-01-21", "2019-02-18", "2019-04-13", "2019-05-27", "2019-07-04", "2019-09-02",
-             "2019-10-14", "2019-11-11", "2019-11-28", "2019-12-25")
-
-# add a variable to check if the bike sharing happened on a workday
-df$holidays = df$start_date %in% holidays
-df$workdays = !(df$weekday %in% c("Saturday", "Sunday") | df$holidays)
-df$workdays = recode_factor(as.factor(df$workdays), "TRUE" = "Workdays", "FALSE" = "Non-workdays")
-df = df %>% select(!c("weekday", "holidays", "start_date", "Duration"))
-
-df = df %>% 
-  group_by(Year, Month, Day, Hour, PRCP, SNOW, SNWD, TAVG, TMAX, TMIN, workdays, Member.type) %>%
-  count(name="num")
-```
-
 
 ```{r}
 df %>% 
@@ -75,6 +14,7 @@ df %>%
     ylab("Number of riders") +
     coord_flip()
 ```
+According to the graph above, it can be observed that the number of riders peaks during rush hours each day. Moreover, the number of riders gradually decreases and achieves its lowest point at 3:00 AM. 
 
 ```{r}
 df %>% 
@@ -82,27 +22,12 @@ df %>%
   summarise(num=mean(num)) %>%
   mutate(Time = factor(sprintf("%s:00",Hour))) %>%
   mutate(Time = fct_rev(Time)) %>%
-  ggplot(aes(x=Time, y=num)) +
-    geom_bar(stat="identity") +
-    facet_wrap(.~Member.type) +
-    ylab("Number of riders") +
-    coord_flip()
-```
-```{r}
-df %>% 
-  group_by(Hour, Member.type) %>% 
-  summarise(num=mean(num)) %>%
-  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
-  mutate(Time = fct_rev(Time)) %>%
-  mutate(num = ifelse(Member.type == "Member", num, -num)) %>%
-  ggplot(aes(x=Time, y=num, fill=Member.type)) + 
+  ggplot(aes(x=Time, y=num)) + 
     geom_bar(stat="identity") +
     coord_flip() +
-    scale_y_continuous(name = "Number of riders", 
-                       breaks = seq(-250,1000,250), 
-                       limits = c(-250, 1000),
-                       labels = abs(seq(-250,1000,250)))
+    facet_wrap(~Member.type)
 ```
+When comparing number of riders between member and casual riders, we notice the number of casual riders is much lower than member riders. More importantly, there are different patterns of bike riding for two types of riders. For members, as in the last graph, the number of riders increases rapidly during rush hours. It can be predicted that many member riders use bike sharing for daily commute. On the other hand, for casual riders, most bike sharing happen during the daytime and there is no rapid increase in rush hours.
 
 ```{r}
 df %>% 
@@ -122,54 +47,50 @@ df %>%
 ```
 
 
-```{r}
-df %>% 
-  group_by(Month, Hour, Member.type) %>%
-  summarise(num=mean(num)) %>%
-  dplyr::filter(Month == "Aug") %>%
-  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
-  mutate(Time = fct_rev(Time)) %>%
-  mutate(num = ifelse(Member.type == "Member", num, -num)) %>%
-  ggplot(aes(x=Time, y=num, fill=Member.type)) + 
-    geom_bar(stat="identity") +
-    coord_flip() +
-    scale_y_continuous(name = "Number of riders", 
-                       breaks = seq(-250,1250,250), 
-                       limits = c(-250, 1250),
-                       labels = abs(seq(-250,1250,250)))
-```
+
 
 ```{r}
 df %>% 
-  group_by(Month, Hour, Member.type) %>%
+  group_by(Member.type, Hour) %>%
   summarise(num=mean(num)) %>%
-  dplyr::filter(Month == "Mar") %>%
-  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
-  mutate(Time = fct_rev(Time)) %>%
-  mutate(num = ifelse(Member.type == "Member", num, -num)) %>%
-  ggplot(aes(x=Time, y=num, fill=Member.type)) + 
-    geom_bar(stat="identity") +
-    coord_flip() +
-    scale_y_continuous(name = "Number of riders", 
-                       breaks = seq(-250,1000,250), 
-                       limits = c(-250, 1000),
-                       labels = abs(seq(-250,1000,250)))
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
+```
+```{r}
+df %>% 
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num))
 ```
 
 ```{r}
-df %>% 
-  group_by(Month, Hour, Member.type) %>%
+Q_1 = c("Jan", "Feb", "Mar")
+Q_2 = c("Apr", "May", "Jun")
+Q_3 = c("Jul", "Aug", "Sep")
+Q_4 = c("Oct", "Nov", "Dec")
+hour_inter_1 = df %>% 
+  dplyr::filter(Month %in% Q_1) %>%
+  group_by(Hour, Member.type) %>%
   summarise(num=mean(num)) %>%
-  dplyr::filter(Month == "Jul") %>%
-  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
-  mutate(Time = fct_rev(Time)) %>%
-  mutate(num = ifelse(Member.type == "Member", num, -num)) %>%
-  ggplot(aes(x=Time, y=num, fill=Member.type)) + 
-    geom_bar(stat="identity") +
-    coord_flip() +
-    scale_y_continuous(name = "Number of riders", 
-                       breaks = seq(-250,1000,250), 
-                       limits = c(-250, 1000),
-                       labels = abs(seq(-250,1000,250)))
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
+hour_inter_2 = df %>% 
+  dplyr::filter(Month %in% Q_2) %>%
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
+hour_inter_3 = df %>% 
+  dplyr::filter(Month %in% Q_3) %>%
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
+hour_inter_4 = df %>% 
+  dplyr::filter(Month %in% Q_4) %>%
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
 ```
+
 
