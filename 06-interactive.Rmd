@@ -1,5 +1,57 @@
 # Interactive component
 
-<script src="https://d3js.org/d3.v4.js"></script>
-<svg width="1000" height="1000" id="qr_svg"></svg>
-<script src="qrjs.js"></script>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Data preparatrion for interactive graph
+library(dplyr)
+library(purrr)
+library(prob)
+library(ggplot2)
+library(ggridges)
+library(tidyverse)
+library(lubridate)
+bike = read.csv("data/bike.csv")
+Q_1 = c("Jan", "Feb", "Mar")
+Q_2 = c("Apr", "May", "Jun")
+Q_3 = c("Jul", "Aug", "Sep")
+Q_4 = c("Oct", "Nov", "Dec")
+hour_inter_1 = bike %>% 
+  dplyr::filter(Month %in% Q_1) %>%
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
+hour_inter_2 = bike %>% 
+  dplyr::filter(Month %in% Q_2) %>%
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
+hour_inter_3 = bike %>% 
+  dplyr::filter(Month %in% Q_3) %>%
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
+hour_inter_4 = bike %>% 
+  dplyr::filter(Month %in% Q_4) %>%
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  select(Casual, Member)
+```
+
+## 1) Daily pattern of bike riding
+
+<script src="https://d3js.org/d3.v6.js"></script>
+<svg width="1000" height="700" id="part2_svg"></svg>
+<script src="part2.js"></script>
+
+Hovering mouse on the bar, the time and the number of riders appear. By selecting different quarter or the whole year of 2019, we can check the average number of bike riding each hour over a period of time. Comparing graphs of different quarter, we observe that people tend to use the bike sharing more in summer than in winter. Also, there is no exception that the number of bike riding of registered riders peaks at 8:00 AM and 17:00 PM in all four quarters and that the number of casual riders increases in the daytime. In short, the riding patterns for members and casual riders are constant in the whole year. 
+
+## 2) Weather effect
+<svg width="960" height="500" id="part3_svg"></svg>
+<script src="part3.js"></script>
+
+Since most of days in DC have precipitation of less than 1 inches, points are clustered in the left of the static graph of precipitation and it is hard to tell whether different levels of rains have different impact on bike rental. Therefore, we created an interactive scatter plot which allows zooming of the x axis using the mouse or touch. Such interactivity allows us to look into the impact of specific range of precipitation. 
+
+In fact, we found that precipitation has a diminishing marginal effect. That is the difference between no rain and 0.1 inches of rain is more significant than the difference between 0.5 and 0.6 inches.And the correlation between rain and lower ridership is less clear partly because there are fewer observations in the data set.

@@ -6,3 +6,8 @@ site: bookdown::bookdown_site
 ---
 
 # Introduction
+
+Bike-sharing system is a modern concept that evolves from the traditional bike rentals where the entire cycle of membership management, rental and return is fully digitized. Through the digital systems built on top of it, users are able to easily rent a bike from a particular position and return 
+it at another one. As of May 2018, more than 1,600 bike-sharing programs were in operation worldwide, providing more than 18 million bicycles for public use. These programs are used for both transportation and leisure trips but are primarily intended to facilitate short transportation trips. 
+
+Today, there exists a tremendous amount of interest in the bike-sharing system considering its important role in traffic, environmental and health issues. Besides its numerous real world applications, the characteristics of the data generated render them an inspiring research topic. Different from other transportation services such as bus and subway, it has detailed records of the duration of travel and departure and arrival locations. This feature empowers it to become a virtual sensor network that can be used for detecting the city's mobility. Therefore, the living pattern of people living in every city that has the bike-sharing system can be further explored thanks to the data of their riding behaviors.

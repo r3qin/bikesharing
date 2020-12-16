@@ -1,1 +1,214 @@
 # Results
+
+## Part 1
+The granularity of the main data is at the hourly level. However, for some of the analysis we will also want to compute daily statistics. In particular, in this part we will be analyzing the daily number of registered and unregistered users.
+
+```{r}
+# download bike sharing data
+folder_path = "data/bike_data"
+# zip_path = "data/bike_data/201901-capitalbikeshare-tripdata.zip"
+csv_path = "data/201901-capitalbikeshare-tripdata.csv"
+# unzip(zip_path, exdir=folder_path)
+df_original = read.csv(csv_path)
+for (m in 2:12) {
+  # zip_path = sprintf("data/bike_data/2019%02d-capitalbikeshare-tripdata.zip", m)
+  csv_path = sprintf("data/2019%02d-capitalbikeshare-tripdata.csv", m)
+  # if (m == 7) {
+  #   file.rename("data/bike_data/201907-capitalbikeshare-tripdata", csv_path)
+  # }
+  # unzip(zip_path, exdir=folder_path)
+  df_original = rbind(df_original, read.csv(csv_path))
+}
+```
+
+```{r}
+# drop unnecessary variables
+df = df_original %>% select(c(1, 2, 3, 9))
+# create variables regarding date and time
+t_start = strptime(as.character(df$Start.date), "%Y-%m-%d %H:%M:%S")
+df$date = as.character(date(t_start))
+df$year = year(t_start)
+df$month = month(t_start, label=TRUE)
+df$day = day(t_start)
+df$hour = hour(t_start)
+df = df %>% select(!c("Start.date", "End.date"))
+# add the variable: day of week
+df$weekday = weekdays(as.Date(df$date, "%Y-%m-%d"), abbreviate=TRUE)
+# holidays of 2011 and 2012
+holidays = c("2019-01-01","2019-01-21", "2019-02-18", "2019-04-13", "2019-05-27", "2019-07-04", "2019-09-02",
+             "2019-10-14", "2019-11-11", "2019-11-28", "2019-12-25")
+# add a variable to check if the bike sharing happened on a workday
+df$holiday = df$date %in% holidays
+df$workingday = !(df$weekday %in% c("Sat", "Sun") | df$holiday)
+df$holiday = recode_factor(as.factor(df$holiday), "TRUE" = "yes", "FALSE" = "no")
+df$workingday = recode_factor(as.factor(df$workingday), "TRUE" = "yes", "FALSE" = "no")
+```
+
+### 1)
+Let's begin by comparing the distribution of the daily counts of casual and member riders. The following plot overlays the distribution of the daily counts of `casual` and `member` user with the granularity of the records being daily counts.
+```{r}
+plot_multi_histogram <- function(df, feature, label_column) {
+    plt <- ggplot(df, aes(x=eval(parse(text=feature)), fill=eval(parse(text=label_column)))) +
+    geom_histogram(alpha=0.7, position="identity", aes(y = ..density..), color="black", binwidth=500) +
+    geom_density(alpha=0.7) +
+    labs(x="Rider count", y="Density")
+    plt + guides(fill=guide_legend(title="Member type")) +
+    ggtitle("Distribution Comparison of Casual vs Registered Riders")
+}
+daily_counts = df %>% group_by(Member.type, date) %>% count()
+plot_multi_histogram(daily_counts, 'n', 'Member.type')
+```
+The distribution for the casual riders is right skewed with the mode at around 1500, a tail extending to over 5000 (no counts more than 7500); the one with the member ones is left skewed with the mode at around 1,1000. The spread of the casual distribution is more concentrated on the range from 0 to 4000 than that of the member one that has a spread of much wider span from 0 to 15,000. Both distribution do not have significant outliers.
+
+### 2)
+The density plots do not show us how the daily counts for casual and member riders vary together. The following scatter plot helps us to investigate the relationship between casual and member counts. We will also draw a linear linear regression line for both groups. The points in the scatter plot are colored according to whether or not the day is working day. Since there are many points in the scatter plot, we make them small to help with solving the overplotting issue.
+
+```{r}
+daily_counts <- df %>% 
+  group_by(Member.type, date, workingday) %>% 
+  count()
+daily_counts <- daily_counts %>% pivot_wider(names_from=Member.type, values_from=n)
+ggplot(daily_counts, aes(x=Casual, y=Member, color=workingday)) +
+  geom_point() +
+  geom_smooth(method=lm) +
+    ggtitle("Comparison of Casual vs Registered Riders on Working and Nonworking Days")
+```
+The scatter plot roughly exhibits a linear relationship between casual and registered riders on the weekend, but we cannot tell whether a point occurs on the weekend because the plot has the overplotting issue which means there are many overlapping points that make it difficult to tell where the data lies.
+
+### 3)
+The scatter plot makes clear the separation between the work days and non-work days. However, the overplotting makes it difficult to see the density of the joint counts. To address this issue, let's try visualizing the data with another technique, the kernel density plot.
+
+```{r}
+ggplot(daily_counts, aes(x=Casual, y=Member, group=workingday)) + 
+  stat_density_2d(aes(alpha=..level.., fill=workingday), geom="polygon")
+```
+The kernel density plot suggests that for work days there are significantly more member riders than casual ones but for nonwork days the difference is not as large. It's obviously easier to see the relationship on this plot since the density centers look more clear and therefore the overplotting issue is addressed.
+
+
+## Part 2
+
+### 1)
+```{r echo=FALSE}
+date = paste(bike$Year, bike$Month, bike$Day, sep="-")
+time = paste(bike$Hour, "00", "00", sep = ":")
+bike$time = as.POSIXct(paste(date, time), format="%Y-%b-%d %H:%M:%S")
+bike %>% 
+  mutate(Member.type = factor(Member.type)) %>%
+  mutate(Member.type = fct_rev(Member.type)) %>%
+  dplyr::filter(Month == "Jan") %>%
+  ggplot(aes(x=time, y=num, color=Member.type)) +
+  geom_line() +
+  facet_wrap(.~(Day > 15), ncol=1, scales="free_x") +
+  ggtitle("Number of riders every hour in Jan 2019") +
+  theme(strip.text.x = element_blank(), plot.title = element_text(lineheight=1, face="bold", hjust = 0.5)) +
+  scale_color_manual(values = c("skyblue3", "lightpink3"))
+bike = bike %>% select(!time)
+```
+
+If we look at the graph of number of riders every hour in Jan 2019, we notice that there is a repeating pattern that the number of riders keep fluctuating every day. To take a closer look at the pattern of number of bike riding every day. We want to know the average number of bike riding each hour in 2019.
+
+### 2)
+```{r echo=FALSE}
+timeline = c("0:00","1:00","2:00","3:00","4:00","5:00","6:00","7:00","8:00",
+             "9:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00",
+             "17:00","18:00","19:00","20:00","21:00","22:00","23:00")
+bike %>% 
+  group_by(Hour) %>%
+  summarise(num=mean(num)) %>%
+  mutate(Time = factor(paste(Hour,"00",sep = ":"), levels = timeline)) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  ggplot(aes(x=Time, y=num)) +
+    geom_bar(stat="identity") +
+    ylab("Number of riders") +
+    ggtitle("Number of riders each hour") +
+    theme(plot.title = element_text(lineheight=1, face="bold", hjust = 0.5)) +
+    coord_flip()
+```
+
+According to the graph above, it can be observed that the number of riders peaks during rush hours each day. Moreover, the number of riders gradually decreases and achieves its lowest point at 3:00 AM. 
+
+### 3)
+```{r echo=FALSE}
+bike %>% 
+  group_by(Hour, Member.type) %>% 
+  summarise(num=mean(num)) %>%
+  mutate(Time = factor(sprintf("%s:00",Hour))) %>%
+  mutate(Time = fct_rev(Time)) %>%
+  ggplot(aes(x=Time, y=num)) + 
+    geom_bar(stat="identity") +
+    ggtitle("Number of two types of riders each hour") +
+    theme_grey(13) +
+    theme(plot.title = element_text(lineheight=1, face="bold", hjust = 0.5)) +
+    coord_flip() +
+    facet_wrap(~Member.type)
+```
+
+When comparing number of riders between member and casual riders, we notice the number of casual riders is much lower than member riders. More importantly, there are different patterns of bike riding for two types of riders. For members, as in the last graph, the number of riders increases rapidly during rush hours. It can be predicted that many member riders use bike sharing for daily commute. On the other hand, for casual riders, most bike sharing happen during the daytime and there is no rapid increase in rush hours.
+
+
+
+## Part 3 Weather Impact on bike rental
+
+Since our original data was aggregated on a hourly basis. To analyze weather's impact on bike rental, we will first turn the data into daily basis.
+
+```{r}
+df<-read.csv("https://raw.githubusercontent.com/cai0909/data/main/data.csv")
+total_sum<-df %>% group_by(Year,Month,Day) %>% summarize(number=sum(num)) 
+day<-df %>% group_by(Year,Month,Day) %>% slice_head(n=1)
+by_day<-day %>% left_join(total_sum,by=c('Year','Month','Day'),keep=FALSE) %>% subset(select=-c(X,Hour,num,Member.type));
+```
+### 1)
+
+First, we visualized the average number of trips per day in different temperatures.Clearly from the graph below,we can see that the number of trips ramps up quickly between 0 and 60 degrees, but above 60 degrees or so there’s a much weaker relationship between rental and temperature. 
+
+```{r}
+library(ggplot2)
+temp_count<- by_day %>% group_by(TAVG) %>% summarize(num=mean(number))
+ggplot(temp_count,aes(TAVG,num))+
+  geom_col()+
+  labs(title="Impact of temperature on number of trips per day",y="average trips per day",x="average temperature (Fahrenheit)")+
+  scale_x_continuous(breaks=c(20,30,40,50,60,70,80,90,100))+
+  theme_grey(16)+
+  theme(plot.title = element_text(face="bold"))
+```
+At around 55 degree, there is a extremely high number of bike rentals. We found this is mainly associated with special events-National cherry blossom festival in DC rather than with temperature.
+
+### 2)
+
+Next, we visualized the impact of rainy days. It's surprising to see that the rainy days are not necessarily associated with less rentals.In fact, on the day with extremely large rains, the number of trips is actually pretty high. Also, it's interesting to see that number of trips on workdays are less affected by rains than on weekends. A reasonable guess is that on weekdays people cannot avoid renting bikes for commuting no matter if it is rainy or not.
+
+```{r}
+prcp_count<- by_day %>% group_by(PRCP,workdays) %>% summarize(num=mean(number));
+ggplot(prcp_count,aes(x=PRCP,y=num,color=workdays))+
+  geom_point(alpha=0.5)+
+  geom_smooth(se = FALSE)+
+  facet_wrap(vars(workdays),nrow=1)+
+  labs(title="Impact of rains on workdays versus non-workdays",subtitle="Number of trips on workdays are less affected by raining  ",y="Average trips per day",x=
+         "PRCP(inches)")+
+    theme_gray(15)+
+  theme(plot.title = element_text(face="bold"))
+```
+
+Then, we looked into the impact of snow. The impact of snow is very obvious as average number of trips drops drastically on snowy days. And with the increasing severeness of snow, the number of trips decreases proportionally. 
+
+```{r}
+library(forcats)
+by_snowfall<-by_day %>% mutate(ifsnow=if_else(SNOW>0,"Snowy","Not snowy") ) 
+ggplot(by_snowfall,aes(x=as_factor(ifsnow),y=number,fill=ifsnow))+
+  geom_boxplot(varwidth=TRUE)+
+labs(title="Distribution of daily trip numbers by snow",y="Number of trips",subtitle = "Number of trips daily drops drastically on snowy days",fill="Weather")+
+  scale_fill_manual(values=c("#E69F00", "#56B4E9"))+
+  theme_grey(16)+
+  theme(plot.title = element_text(face="bold"),
+        axis.title.x = element_blank())
+```
+
+
+
+```{r}
+ggplot(by_day[by_day$SNWD!=0,],aes(x=SNWD,y=number))+
+  geom_point(aes(color=workdays))+
+  labs(title="Impact of snow depth on number of trips",y="Number of trips",subtitle = "Only data on snowy days are included",x="Snow Depth (inches)")+
+  theme_grey(16)+
+  theme(plot.title = element_text(face="bold"))
+```

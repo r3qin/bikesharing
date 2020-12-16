@@ -1,5 +1,28 @@
 # Data transformation
-All the data we found is in csv files. They can be imported by R using read.csv() function. The bike sharing data contains variables start time and end time including date and time. Since we are interested in bike riding patterns hourly, we split the variables into start date, start time, end date, and end time. We suppose that weather affects bike sharing. Hence by using left_join() function in the dplyr package we decide to merge data sets of bike sharing and weather. Finally, it is important to check if the bike sharing happened on work days or not by adding variables: day of week and holidays.
+All the data we found is in csv files. They can be imported by R using read.csv() function. 
+
+The bike sharing data contains unnecessary variables for the analysis: *duration*, *start station*, *end station*, and *bike number*. Those columns are dropped. In addition, we choose variable *start date* indicating the time of occurrence of the bike riding. The variable is separated into four variables: *Year*, *Month*, *Day*, and *Hour*. 
+
+For the temperature data, the format of dates is not in a preferable format like "YYYY-MM-DD". After change the format of variable *DATE*, by using *left_join()* function in the dplyr package we can merge data sets of bike sharing and weather on index variable *DATE*. 
+
+To find out how workdays affect bike sharing, the variable *workdays* is added. It returns true if the day is not a holiday nor weekends and false otherwise.
+
+The data set tends to be large when every row represents a trip of bike riding. Instead, we decide to compute the number of bike riding every hour. The length of derived data set is 16889 and there are 13 variables.
+
+* Year - Year of the occurrence of the bike riding, 2019
+* Month - Month of the occurrence of the bike riding
+* Day - Day of the occurrence of the bike riding
+* Hour - Hour of the occurrence of the bike riding
+* PRCP - The amount of pricipitation
+* SNOW - The amount of snow
+* SNWD - The depth of snow
+* TAVG - The average temperature in Fahrenheit
+* TMAX - The maximum temperature in Fahrenheit
+* TMIN - The minimum temperature in Fahrenheit
+* workdays - Indicating if it is a workday
+* Member.Type – Indicates whether user was a "registered" member or a "casual" rider
+* num - Number of bike riding
+
 
 ```{r message=FALSE, warning=FALSE}
 library(dplyr)
@@ -11,7 +34,7 @@ library(tidyverse)
 library(lubridate)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE, results = 'hide'}
 # create data folder
 if (!file.exists("data")) {
   dir.create(file.path(getwd(), "data"))
@@ -22,7 +45,7 @@ address = "https://s3.amazonaws.com/capitalbikeshare-data/201907-capitalbikeshar
 download.file(address, file.path("data", basename(address)))
 unzip(file.path("data", basename(address)), "201907-capitalbikeshare-tripdata", exdir=file.path("data"))
 file.rename(file.path("data", "201907-capitalbikeshare-tripdata"), file.path("data", "201907-capitalbikeshare-tripdata.csv"))
-df = read.csv("data/201907-capitalbikeshare-tripdata.csv")
+bike <<- read.csv("data/201907-capitalbikeshare-tripdata.csv")
 for (m in 1:12) {
   if (m == 7) {
     next
@@ -30,21 +53,21 @@ for (m in 1:12) {
   address = sprintf("https://s3.amazonaws.com/capitalbikeshare-data/2019%02d-capitalbikeshare-tripdata.zip",m)
   download.file(address, file.path("data", basename(address)))
   f = unzip(file.path("data", basename(address)), gsub(".zip", ".csv", basename(address)), exdir=file.path("data"))
-  df = rbind(df, read.csv(f))
+  bike = rbind(bike, read.csv(f))
 }
 
 
 # drop unnecessary variables
-df = df %>% select(c(1, 2, 3, 9))
+bike = bike %>% select(c(1, 2, 3, 9))
 
 # create variables regarding date and time
-t_start = strptime(as.character(df$Start.date), "%Y-%m-%d %H:%M:%S")
-df$start_date = as.character(date(t_start))
-df$Year = year(t_start)
-df$Month = month(t_start, label = TRUE)
-df$Day = day(t_start)
-df$Hour = hour(t_start)
-df = df %>% select(!c("Start.date", "End.date"))
+t_start = strptime(as.character(bike$Start.date), "%Y-%m-%d %H:%M:%S")
+bike$start_date = as.character(date(t_start))
+bike$Year = year(t_start)
+bike$Month = month(t_start, label = TRUE)
+bike$Day = day(t_start)
+bike$Hour = hour(t_start)
+bike = bike %>% select(!c("Start.date", "End.date"))
 
 # read temperature data
 # change date format
@@ -52,25 +75,25 @@ temp = read.csv("temp_data/temp.csv")
 temp$DATE = format(strptime(as.character(temp$DATE), "%m/%d/%Y"), "%Y-%m-%d")
 
 # merge two data frames on date
-df = left_join(df, temp, by = c("start_date" = "DATE"))
+bike = left_join(bike, temp, by = c("start_date" = "DATE"))
 
 # add the variable: day of week
-df$weekday = weekdays(as.Date(df$start_date, "%Y-%m-%d"))
+bike$weekday = weekdays(as.Date(bike$start_date, "%Y-%m-%d"))
 
 # holidays of 2011 and 2012
 holidays = c("2019-01-01","2019-01-21", "2019-02-18", "2019-04-13", "2019-05-27", "2019-07-04", "2019-09-02",
              "2019-10-14", "2019-11-11", "2019-11-28", "2019-12-25")
 
 # add a variable to check if the bike sharing happened on a workday
-df$holidays = df$start_date %in% holidays
-df$workdays = !(df$weekday %in% c("Saturday", "Sunday") | df$holidays)
-df$workdays = recode_factor(as.factor(df$workdays), "TRUE" = "Workdays", "FALSE" = "Non-workdays")
-df = df %>% select(!c("weekday", "holidays", "start_date", "Duration"))
+bike$holidays = bike$start_date %in% holidays
+bike$workdays = !(bike$weekday %in% c("Saturday", "Sunday") | bike$holidays)
+bike$workdays = recode_factor(as.factor(bike$workdays), "TRUE" = "Workdays", "FALSE" = "Non-workdays")
+bike = bike %>% select(!c("weekday", "holidays", "start_date", "Duration"))
 
-df = df %>% 
+bike = bike %>% 
   group_by(Year, Month, Day, Hour, PRCP, SNOW, SNWD, TAVG, TMAX, TMIN, workdays, Member.type) %>%
   count(name="num")
+write.csv(bike, "data/bike.csv")
 ```
-
 
 
