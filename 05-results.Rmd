@@ -1,46 +1,103 @@
 # Results
 
-the daily counts of casual and registered riders
-```{r}
-df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date) %>% count() %>% ggplot(aes(n)) + 
-  geom_histogram() + 
-  facet_wrap(~Member.type)
-```
-```{r}
-df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date) %>% count() %>% ggplot(aes(x=Member.type, y=n)) +
-  geom_boxplot()
-```
-
-
-```{r}
-df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date) %>% count() %>% ggplot(aes(x=n, y=Member.type)) +
-  geom_density_ridges()
-```
-```{r}
-member = df[df$Member.type == "Member",] %>% group_by(start_date) %>% count() %>% ungroup() %>% .$n
-casual = df[df$Member.type == "Casual",] %>% group_by(start_date) %>% count() %>% ungroup() %>% .$n
-ks.test(x=member, y=casual)
-```
-```{r}
-df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(workdays, Member.type, start_date) %>% count() %>% ggplot(aes(n)) + 
-  geom_histogram() + 
-  facet_wrap(~workdays+Member.type)
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(purrr)
+library(prob)
+library(ggplot2)
+library(ggridges)
+library(tidyverse)
+library(lubridate)
 ```
 
+### Data Transformation for Part 1
 
-The average number of riders for each hour of the day for the casual and registered riders
 ```{r}
-df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_hour) %>% count() %>% ggplot(aes(x=start_hour, y=n/24)) +
-  geom_bar(stat="identity") +
-  facet_wrap(.~Member.type)
-```
-Weather
-```{r}
-df[df$Member.type %in% c("Member", "Casual"),] %>% group_by(Member.type, start_date, TAVG) %>% count() %>% ggplot(aes(x=TAVG, y=n, color=Member.type)) +
-  geom_point()
-```
-```{r}
-head(df)
+# download bike sharing data
+folder_path = "data/bike_data"
+# zip_path = "data/bike_data/201901-capitalbikeshare-tripdata.zip"
+csv_path = "data/bike_data/201901-capitalbikeshare-tripdata.csv"
+# unzip(zip_path, exdir=folder_path)
+df_original = read.csv(csv_path)
+for (m in 2:12) {
+  # zip_path = sprintf("data/bike_data/2019%02d-capitalbikeshare-tripdata.zip", m)
+  csv_path = sprintf("data/bike_data/2019%02d-capitalbikeshare-tripdata.csv", m)
+  # if (m == 7) {
+  #   file.rename("data/bike_data/201907-capitalbikeshare-tripdata", csv_path)
+  # }
+  # unzip(zip_path, exdir=folder_path)
+  df_original = rbind(df_original, read.csv(csv_path))
+}
 ```
 
+```{r}
+# drop unnecessary variables
+df = df_original %>% select(c(1, 2, 3, 9))
 
+# create variables regarding date and time
+t_start = strptime(as.character(df$Start.date), "%Y-%m-%d %H:%M:%S")
+df$date = as.character(date(t_start))
+df$year = year(t_start)
+df$month = month(t_start, label=TRUE)
+df$day = day(t_start)
+df$hour = hour(t_start)
+df = df %>% select(!c("Start.date", "End.date"))
+
+# add the variable: day of week
+df$weekday = weekdays(as.Date(df$date, "%Y-%m-%d"), abbreviate=TRUE)
+# holidays of 2011 and 2012
+holidays = c("2019-01-01","2019-01-21", "2019-02-18", "2019-04-13", "2019-05-27", "2019-07-04", "2019-09-02",
+             "2019-10-14", "2019-11-11", "2019-11-28", "2019-12-25")
+# add a variable to check if the bike sharing happened on a workday
+df$holiday = df$date %in% holidays
+df$workingday = !(df$weekday %in% c("Sat", "Sun") | df$holiday)
+df$holiday = recode_factor(as.factor(df$holiday), "TRUE" = "yes", "FALSE" = "no")
+df$workingday = recode_factor(as.factor(df$workingday), "TRUE" = "yes", "FALSE" = "no")
+```
+
+## TODO: after finishing 03-cleaning, directly load the dataframe saved by it.
+
+### Part 1
+The granularity of the main data is at the hourly level. However, for some of the analysis we will also want to compute daily statistics. In particular, in this part we will be analyzing the daily number of registered and unregistered users.
+
+# 1)
+Let's begin by comparing the distribution of the daily counts of casual and member riders. The following plot overlays the distribution of the daily counts of `casual` and `member` user with the granularity of the records being daily counts.
+```{r}
+plot_multi_histogram <- function(df, feature, label_column) {
+    plt <- ggplot(df, aes(x=eval(parse(text=feature)), fill=eval(parse(text=label_column)))) +
+    geom_histogram(alpha=0.7, position="identity", aes(y = ..density..), color="black", binwidth=500) +
+    geom_density(alpha=0.7) +
+    labs(x="Rider count", y="Density")
+    plt + guides(fill=guide_legend(title="Member type")) +
+    ggtitle("Distribution Comparison of Casual vs Registered Riders")
+}
+
+daily_counts = df %>% group_by(Member.type, date) %>% count()
+plot_multi_histogram(daily_counts, 'n', 'Member.type')
+```
+The distribution for the casual riders is right skewed with the mode at around 1500, a tail extending to over 5000 (no counts more than 7500); the one with the member ones is left skewed with the mode at around 1,1000. The spread of the casual distribution is more concentrated on the range from 0 to 4000 than that of the member one that has a spread of much wider span from 0 to 15,000. Both distribution do not have significant outliers.
+
+# 2)
+The density plots do not show us how the daily counts for casual and member riders vary together. The following scatter plot helps us to investigate the relationship between casual and member counts. We will also draw a linear linear regression line for both groups. The points in the scatter plot are colored according to whether or not the day is working day. Since there are many points in the scatter plot, we make them small to help with solving the overplotting issue.
+
+```{r}
+daily_counts <- df %>% 
+  group_by(Member.type, date, workingday) %>% 
+  count()
+daily_counts <- daily_counts %>% pivot_wider(names_from=Member.type, values_from=n)
+
+ggplot(daily_counts, aes(x=Casual, y=Member, color=workingday)) +
+  geom_point() +
+  geom_smooth(method=lm) +
+    ggtitle("Comparison of Casual vs Registered Riders on Working and Nonworking Days")
+```
+The scatter plot roughly exhibits a linear relationship between casual and registered riders on the weekend, but we cannot tell whether a point occurs on the weekend because the plot has the overplotting issue which means there are many overlapping points that make it difficult to tell where the data lies.
+
+# 3)
+The scatter plot makes clear the separation between the work days and non-work days. However, the overplotting makes it difficult to see the density of the joint counts. To address this issue, let's try visualizing the data with another technique, the kernel density plot.
+
+```{r}
+ggplot(daily_counts, aes(x=Casual, y=Member, group=workingday)) + 
+  stat_density_2d(aes(alpha=..level.., fill=workingday), geom="polygon")
+```
+The kernel density plot suggests that for work days there are significantly more member riders than casual ones but for nonwork days the difference is not as large. It's obviously easier to see the relationship on this plot since the density centers look more clear and therefore the overplotting issue is addressed.

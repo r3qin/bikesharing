@@ -1,6 +1,5 @@
 # Data transformation
-All the data we found is in csv files. They can be imported by R using read.csv() function. The bike sharing data contains variables start time and end time including date and time. Since we are interested in bike riding patterns hourly, we split the variables into start date, start time, end date, and end time. We suppose that weather affects bike sharing. Hence by using left_join() function in the dplyr package we decide to merge data sets of bike sharing and weather. Finally, it is important to check if the bike sharing happened on work days or not by adding variables: day of week and holidays.
-
+Import the packages.
 ```{r message=FALSE, warning=FALSE}
 library(dplyr)
 library(purrr)
@@ -11,13 +10,16 @@ library(tidyverse)
 library(lubridate)
 ```
 
+Create a folder to store transformed data.
 ```{r}
-# create data folder
 if (!file.exists("data")) {
   dir.create(file.path(getwd(), "data"))
 }
+```
 
-# download bike sharing data
+Download the bike-sharing data from the website. Since not all downloaded files have the same correct extensions, we need to tweak the code a bit. 
+# TODO: make sure this script can download the files AND change the download path to "data/bike_data"
+```{r}
 address = "https://s3.amazonaws.com/capitalbikeshare-data/201907-capitalbikeshare-tripdata.zip"
 download.file(address, file.path("data", basename(address)))
 unzip(file.path("data", basename(address)), "201907-capitalbikeshare-tripdata", exdir=file.path("data"))
@@ -32,41 +34,82 @@ for (m in 1:12) {
   f = unzip(file.path("data", basename(address)), gsub(".zip", ".csv", basename(address)), exdir=file.path("data"))
   df = rbind(df, read.csv(f))
 }
+```
 
+Load the data.
+```{r}
+folder_path = "data/bike_data"
+# zip_path = "data/bike_data/201901-capitalbikeshare-tripdata.zip"
+csv_path = "data/bike_data/201901-capitalbikeshare-tripdata.csv"
+# unzip(zip_path, exdir=folder_path)
+df_original = read.csv(csv_path)
+for (m in 2:12) {
+  # zip_path = sprintf("data/bike_data/2019%02d-capitalbikeshare-tripdata.zip", m)
+  csv_path = sprintf("data/bike_data/2019%02d-capitalbikeshare-tripdata.csv", m)
+  # if (m == 7) {
+  #   file.rename("data/bike_data/201907-capitalbikeshare-tripdata", csv_path)
+  # }
+  # unzip(zip_path, exdir=folder_path)
+  df_original = rbind(df_original, read.csv(csv_path))
+}
+```
 
+# TODO: split the code
+```{r}
 # drop unnecessary variables
-df = df %>% select(c(1, 2, 3, 9))
+df = df_original %>% select(c(1, 2, 3, 9))
 
 # create variables regarding date and time
 t_start = strptime(as.character(df$Start.date), "%Y-%m-%d %H:%M:%S")
-df$start_date = as.character(date(t_start))
-df$Year = year(t_start)
-df$Month = month(t_start, label = TRUE)
-df$Day = day(t_start)
-df$Hour = hour(t_start)
+df$date = as.character(date(t_start))
+df$year = year(t_start)
+df$month = month(t_start, label=TRUE)
+df$day = day(t_start)
+df$hour = hour(t_start)
 df = df %>% select(!c("Start.date", "End.date"))
 
-# read temperature data
-# change date format
-temp = read.csv("temp_data/temp.csv")
-temp$DATE = format(strptime(as.character(temp$DATE), "%m/%d/%Y"), "%Y-%m-%d")
-
-# merge two data frames on date
-df = left_join(df, temp, by = c("start_date" = "DATE"))
-
 # add the variable: day of week
-df$weekday = weekdays(as.Date(df$start_date, "%Y-%m-%d"))
-
+df$weekday = weekdays(as.Date(df$date, "%Y-%m-%d"), abbreviate=TRUE)
 # holidays of 2011 and 2012
 holidays = c("2019-01-01","2019-01-21", "2019-02-18", "2019-04-13", "2019-05-27", "2019-07-04", "2019-09-02",
              "2019-10-14", "2019-11-11", "2019-11-28", "2019-12-25")
+# add a variable to check if the bike sharing happened on a workday
+df$holiday = df$date %in% holidays
+df$workingday = !(df$weekday %in% c("Sat", "Sun") | df$holiday)
+df$holiday = recode_factor(as.factor(df$holiday), "TRUE" = "yes", "FALSE" = "no")
+df$workingday = recode_factor(as.factor(df$workingday), "TRUE" = "yes", "FALSE" = "no")
+```
 
+Get a summary of the dataset.
+```{r}
+### Test cell
+Hmisc::describe(df)
+```
+
+# TODO: Save the dataframe.
+```{r}
+
+```
+
+
+# TODO: split the code, generate the merged data frame and save it
+```{r}
+# read temperature data
+temp = read.csv("temp_data/temp.csv")
+# change date format
+temp$DATE = format(strptime(as.character(temp$DATE), "%m/%d/%Y"), "%Y-%m-%d")
+# merge two data frames on date
+df = left_join(df, temp, by = c("start_date" = "DATE"))
+# add the variable: day of week
+df$weekday = weekdays(as.Date(df$start_date, "%Y-%m-%d"))
+# holidays of 2011 and 2012
+holidays = c("2019-01-01","2019-01-21", "2019-02-18", "2019-04-13", "2019-05-27", "2019-07-04", "2019-09-02",
+             "2019-10-14", "2019-11-11", "2019-11-28", "2019-12-25")
 # add a variable to check if the bike sharing happened on a workday
 df$holidays = df$start_date %in% holidays
 df$workdays = !(df$weekday %in% c("Saturday", "Sunday") | df$holidays)
 df$workdays = recode_factor(as.factor(df$workdays), "TRUE" = "Workdays", "FALSE" = "Non-workdays")
 df = df %>% select(!c("weekday", "holidays", "start_date", "Duration"))
-
 df = df %>% 
   group_by(Year, Month, Day, Hour, PRCP, SNOW, SNWD, TAVG, TMAX, TMIN, workdays, Member.type) %>%
   count(name="num")

@@ -1,6 +1,6 @@
 # Missing values
-After running the code data[!complete.cases(data), ], we list all rows with missing values and find out that there are no such rows. Therefore, no imputation is necessary.
 
+After running the following code, we list all rows with missing values and find out that there are no such rows. Therefore, no imputation is necessary.
 ```{r}
 df[!complete.cases(df), ]
 ```
