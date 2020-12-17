@@ -4,7 +4,7 @@
 
 Bike share is one of the most popular transportation methods nowadays. With data from Captial Bikeshare, a bike share system in DC, we decided to analyze how people use bike share in daily life. By creating multiple static and interactive statistical graphs, we successfully found patterns in daily use of bike share system. We created a book to render our results and here is the link: https://r3qin.github.io/bikesharing.
 
-## Packages used
+## Tools used
 
 * dplyr 1.0.2
 * tidyr 1.1.2
@@ -13,6 +13,7 @@ Bike share is one of the most popular transportation methods nowadays. With data
 * ggplot2 3.3.2
 * tidyverse 1.3.0
 * lubridate 1.7.9
+* D3 v6
 
 ## Contribution
 
