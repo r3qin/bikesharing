@@ -6,14 +6,14 @@ Bike share is one of the most popular transportation methods nowadays. With data
 
 ## Tools used
 
-* dplyr 1.0.2
-* tidyr 1.1.2
-* purrr 0.3.4
-* prob 1.0-1
-* ggplot2 3.3.2
-* tidyverse 1.3.0
-* lubridate 1.7.9
-* D3 v6
+* [dplyr](https://dplyr.tidyverse.org/) 1.0.2
+* [tidyr](https://tidyr.tidyverse.org/) 1.1.2
+* [purrr](https://purrr.tidyverse.org/) 0.3.4
+* [prob](https://cran.r-project.org/web/packages/prob/index.html) 1.0-1
+* [ggplot2](https://ggplot2.tidyverse.org/) 3.3.2
+* [tidyverse](https://www.tidyverse.org/) 1.3.0
+* [lubridate](https://lubridate.tidyverse.org/) 1.7.9
+* [D3](https://d3js.org/) v6
 
 ## Contribution
 
