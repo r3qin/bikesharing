@@ -19,28 +19,47 @@ hour_inter_1 = bike %>%
   group_by(Hour, Member.type) %>%
   summarise(num=mean(num)) %>%
   pivot_wider(names_from = Member.type, values_from = num) %>%
-  select(Casual, Member)
+  mutate_if(is.numeric, round) %>%
+  select(Casual, Member) %>%
+  rename(Casual_1 = Casual, Member_1 = Member)
 hour_inter_2 = bike %>% 
   dplyr::filter(Month %in% Q_2) %>%
   group_by(Hour, Member.type) %>%
   summarise(num=mean(num)) %>%
   pivot_wider(names_from = Member.type, values_from = num) %>%
-  select(Casual, Member)
+  mutate_if(is.numeric, round) %>%
+  select(Casual, Member) %>%
+  rename(Casual_2 = Casual, Member_2 = Member)
 hour_inter_3 = bike %>% 
   dplyr::filter(Month %in% Q_3) %>%
   group_by(Hour, Member.type) %>%
   summarise(num=mean(num)) %>%
   pivot_wider(names_from = Member.type, values_from = num) %>%
-  select(Casual, Member)
+  mutate_if(is.numeric, round) %>%
+  select(Casual, Member) %>%
+  rename(Casual_3 = Casual, Member_3 = Member)
 hour_inter_4 = bike %>% 
   dplyr::filter(Month %in% Q_4) %>%
   group_by(Hour, Member.type) %>%
   summarise(num=mean(num)) %>%
   pivot_wider(names_from = Member.type, values_from = num) %>%
-  select(Casual, Member)
+  mutate_if(is.numeric, round) %>%
+  select(Casual, Member) %>%
+  rename(Casual_4 = Casual, Member_4 = Member)
+hour_inter_5 = bike %>% 
+  group_by(Hour, Member.type) %>%
+  summarise(num=mean(num)) %>%
+  pivot_wider(names_from = Member.type, values_from = num) %>%
+  mutate_if(is.numeric, round) %>%
+  select(Casual, Member) %>%
+  rename(Casual_5 = Casual, Member_5 = Member)
+inter = cbind(hour_inter_1, hour_inter_2, hour_inter_3, hour_inter_4, hour_inter_5)
+write.csv(inter, "data/inter.csv", row.names = FALSE)
 ```
 
-## 1) Daily pattern of bike riding
+
+
+## Daily pattern of bike riding
 
 <script src="https://d3js.org/d3.v6.js"></script>
 <svg width="1000" height="700" id="part2_svg"></svg>
@@ -48,7 +67,8 @@ hour_inter_4 = bike %>%
 
 Hovering mouse on the bar, the time and the number of riders appear. By selecting different quarter or the whole year of 2019, we can check the average number of bike riding each hour over a period of time. Comparing graphs of different quarter, we observe that people tend to use the bike sharing more in summer than in winter. Also, there is no exception that the number of bike riding of registered riders peaks at 8:00 AM and 17:00 PM in all four quarters and that the number of casual riders increases in the daytime. In short, the riding patterns for members and casual riders are constant in the whole year. 
 
-## 2) Weather effect
+## Weather effect
+
 <svg width="960" height="500" id="part3_svg"></svg>
 <script src="part3.js"></script>
 
