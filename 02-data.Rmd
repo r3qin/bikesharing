@@ -2,9 +2,9 @@
 
 ## Bike sharing data
 
-As we found our common interests in transportation systems, we noticed that unlike public transportation systems such as bus and subway, bike sharing systems have explicitly recorded statististics like the duration of travel, departure and arrival position. Therefore, we searched online for data related to bike rental. At first, we searched for related data sets on Kaggle, a website contains many data sets for data scientists to work on. We found a data set about Capital Bikeshare. To ensure reliability of the data, we decided to use data directly from the Capital Bikeshare database. Moreover, downloading data directly from the database allowed us to analysis the latest riding data of 2019. We did not choose data from 2020 because with impact of COVID 19, we supposed the lifestyle has been largely influenced. The data set we decided to work on can be found on http://capitalbikeshare.com/system-data.
+As we found our common interests in transportation systems, we noticed that unlike public transportation systems such as bus and subway, bike sharing systems have explicitly recorded statistics like the duration of travel, departure and arrival position. We then searched online for data related to bike rental. At first, we found a data set about Capital Bikeshare on Kaggle, a website that has many data sets for data scientists to work on. To ensure the reliability of our data, we decided to use the data from the original source — the Capital Bikeshare database. Another advantage of going with the original source is that it allowed us to analyze the most up-to-date riding data in 2019, compared to the outdated one in 2012 used in the Kaggle’s processed data. We did not choose the data in 2020 because the pandemic has a negative influence on people’s lifestyle and thus the analysis will not be accurate. The data set we worked on can be found on http://capitalbikeshare.com/system-data.
 
-There are 7 variables in the data set:
+The data set has 3,398,417 observations and 7 variables: 
 
 * Duration – Duration of trip
 * Start Date – Includes start date and time
@@ -14,15 +14,11 @@ There are 7 variables in the data set:
 * Bike Number – Includes ID number of bike used for the trip
 * Member Type – Indicates whether user was a "registered" member or a "casual" rider
 
-Number of observations: 3398417
-
-
-
 ## Weather data
 
-Then, weather conditions are collected from https://www.ncdc.noaa.gov/ to fill the corresponding weather information for each record. Unfortunately, we cannot directly download the data files from the website. The weather data we requested from https://www.ncdc.noaa.gov/ is located at folder "temp_data".
+The weather data are collected from https://www.ncdc.noaa.gov/ to add the weather condition for each day in the year. Since the data files are not publicly accessible from the website, we submitted a download request to https://www.ncdc.noaa.gov/. The data file is located at `/temp_data/temp.csv`.
 
-There are 7 variables in the file:
+The data set has 365 observations and 7 variables: 
 
 * DATE - The index variable indicating the date when data was collected.
 * PRCP - The amount of pricipitation
@@ -32,12 +28,12 @@ There are 7 variables in the file:
 * TMAX - The maximum temperature in Fahrenheit
 * TMIN - The minimum temperature in Fahrenheit
 
-Number of observations: 365
+## Holiday schedule
 
-## Holiday schedules
-
-Holiday schedules can be found on http://dchr.dc.gov/page/holiday-schedule. There is no data file that can be downloaded from the website. Since there are only couples of holidays in 2019, we decide to simply type them down during the data preprocessing.
+The holiday schedule can be found on http://dchr.dc.gov/page/holiday-schedule. Since there is no downloadable data file from the website and there are only couples of holidays in 2019, we manually add them to the data frame in the data transformation stage.
 
 ## Issues
 
-First of all, We discovered that there are a couple of unnecessary variables in the bike sharing data such as *bike number*. Furthermore, the variables *Start Date* and *End Date* contain both date and time. We need them to be separated for analysis purpose. The third problem is that the size of data set is so large that the R computation could be slow during analysis. 
+1. A couple of variables such as `Bike Number` in the bike-sharing data are unnecessary for our research purpose. 
+2. The variables `Start Date` and `End Date` both contain the date and time information, which we need to separate for better analysis. 
+3. The data size is so large that the R computation is slow during the analysis. 

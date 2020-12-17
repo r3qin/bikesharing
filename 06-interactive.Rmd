@@ -61,17 +61,19 @@ write.csv(inter, "data/inter.csv", row.names = FALSE)
 
 ## Daily pattern of bike riding
 
+Hovering the mouse on any bar in the following graph, we can see the hour of a day and the average number of riders during that hour. By selecting among different quarters and the whole year of 2019, we can check the average number of bike riding each hour over this selected period of time. 
+
 <script src="https://d3js.org/d3.v6.js"></script>
 <svg width="1000" height="700" id="part2_svg"></svg>
 <script src="part2.js"></script>
 
-Hovering mouse on the bar, the time and the number of riders appear. By selecting different quarter or the whole year of 2019, we can check the average number of bike riding each hour over a period of time. Comparing graphs of different quarter, we observe that people tend to use the bike sharing more in summer than in winter. Also, there is no exception that the number of bike riding of registered riders peaks at 8:00 AM and 17:00 PM in all four quarters and that the number of casual riders increases in the daytime. In short, the riding patterns for members and casual riders are constant in the whole year. 
+Comparing graphs of different quarters, we observe that people tend to use the bike sharing more during summer time than during winter. Also, the average number of bike riding of `member` riders peaks at 8:00 AM and 17:00 PM in all four quarters and that of `casual` riders increases in the daytime. In short, the riding patterns for `member` and `casual` riders are very constant across the entire year. 
 
 ## Weather effect
+
+Since most of the precipitation in the rainy days in DC is less than 1 inches, points are clustered towards the left of the static graph of precipitation. It is thus difficult to tell whether the association of trip counts with rain is the same across different levels of rains. To further explore the effect of rain on the daily riders' counts, we created an interactive scatter plot where we can zoom in and out of the x axis using the mouse and touch pad. The interaction allows us to look into the impact of specific range of precipitation on the daily riders' counts. 
 
 <svg width="960" height="500" id="part3_svg"></svg>
 <script src="part3.js"></script>
 
-Since most of days in DC have precipitation of less than 1 inches, points are clustered in the left of the static graph of precipitation and it is hard to tell whether different levels of rains have different impact on bike rental. Therefore, we created an interactive scatter plot which allows zooming of the x axis using the mouse or touch. Such interactivity allows us to look into the impact of specific range of precipitation. 
-
-In fact, we found that precipitation has a diminishing marginal effect. That is the difference between no rain and 0.1 inches of rain is more significant than the difference between 0.5 and 0.6 inches.And the correlation between rain and lower ridership is less clear partly because there are fewer observations in the data set.
+In fact, we found that precipitation has a diminishing marginal effect. Specifically, the change of daily trip counts from 0 (no rain) to 0.1 inches of rain is more significant than that from 0.5 to 0.6 inches. And the correlation between rain and lower ridership is less clear partly because the number of observations is inefficient in our data set.

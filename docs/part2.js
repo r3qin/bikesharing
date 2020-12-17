@@ -292,7 +292,7 @@ svg.append("text")
 svg.append("text")
     .attr("x", 0)
     .attr("y", 220)
-    .text("Time")
+    .text("Hour in a day")
     .style("text_anchor", "middle")
     .attr("transform", "translate(-180,250) rotate(-90)");
 

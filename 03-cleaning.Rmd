@@ -1,13 +1,12 @@
 # Data transformation
-All the data we found is in csv files. They can be imported by R using read.csv() function. 
-
-The bike sharing data contains unnecessary variables for the analysis: *duration*, *start station*, *end station*, and *bike number*. Those columns are dropped. In addition, we choose variable *start date* indicating the time of occurrence of the bike riding. The variable is separated into four variables: *Year*, *Month*, *Day*, and *Hour*. 
-
-For the temperature data, the format of dates is not in a preferable format like "YYYY-MM-DD". After change the format of variable *DATE*, by using *left_join()* function in the dplyr package we can merge data sets of bike sharing and weather on index variable *DATE*. 
-
-To find out how workdays affect bike sharing, the variable *workdays* is added. It returns true if the day is not a holiday nor weekends and false otherwise.
-
-The data set tends to be large when every row represents a trip of bike riding. Instead, we decide to compute the number of bike riding every hour. The length of derived data set is 16889 and there are 13 variables.
+In our data transformation script, we perform the following steps:
+1. Since all data are `.csv` files, we load them using the `read.csv()` function in R. 
+2. We drop the unnecessary variables in the bike-sharing data: `Duration`, `Start Station`, `Rnd Station`, and `Bike number`. 
+3. We choose the variable `Start Date` to represent the occurrence time of the bike riding. It is separated into four date and time variables: `Year`, `Month`, `Day`, and `Hour`. 
+4. For the temperature data, we change the format of the variable `DATE` to the standard practice `YYYY-MM-DD`.
+5. We merge the two data sets on the index date variable by using `left_join()` function in the `dplyr` package. 
+6. We add the variable `workdays`, which is true if the day is not a holiday or weekend and false otherwise.
+7. Since the size of the data frame is too large with every row representing a single trip, we change the granularity to hour by aggregation over the total count of bike riding trips in each hour of a day. The derived data set is condensed to 16,889 rows with 13 variables:
 
 * Year - Year of the occurrence of the bike riding, 2019
 * Month - Month of the occurrence of the bike riding

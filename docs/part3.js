@@ -1,8 +1,10 @@
-var margin = {top: 20, right: 20, bottom: 30, left: 40},
+var margin = {top: 40, right: 20, bottom: 50, left: 80},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
     
-var svg = d3.select("body").select("#part3_svg")
+var svg = d3.select("#part3_svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", 
           "translate(" + margin.left + "," + margin.top + ")");
@@ -51,6 +53,7 @@ d3.csv("https://raw.githubusercontent.com/cai0909/data/main/prcp.csv").then(func
       .attr("cx", function(d) { return x(d.PRCP); })
       .attr("cy", function(d) { return y(d.num); })
       .attr("r","5")
+      .style("fill","steelblue")
       .attr("opacity","0.6")
       
       
@@ -78,5 +81,28 @@ d3.csv("https://raw.githubusercontent.com/cai0909/data/main/prcp.csv").then(func
       .style("pointer-events", "all")
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
       .call(zoom);
+      
+    svg.append("text")
+    .attr("y",500-margin.bottom)
+    .attr("x",480)
+    .style("text-anchor", "middle")
+    .text("prcp (inches) ")
+
+    
+    svg.append("text")
+    .attr("y",0-margin.left+20)
+    .attr("x",0-(height/2)-20)
+    .attr('transform', 'rotate(-90)')
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .text("Average trip counts per day ")
+    
+    svg.append("text")
+    .attr("y",margin.top-50)
+    .attr("x",480)
+    .style('font-size',"25px")
+    .style("text-anchor", "middle")
+    .text("Distribution of daily trip counts by snow ")  
+   
 
 });
