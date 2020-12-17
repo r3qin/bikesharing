@@ -49,7 +49,7 @@ plot_multi_histogram <- function(df, feature, label_column) {
     plt <- ggplot(df, aes(x=eval(parse(text=feature)), fill=eval(parse(text=label_column)))) +
         geom_histogram(aes(y = ..density..), alpha=0.7, position="identity", color="black", binwidth=500) +
         geom_density(alpha=0.7) +
-        labs(x="Rider count", y="Density")
+        labs(x="Rider count", y="Density", caption="Data source: Capital Bikeshare")
     plt + guides(fill=guide_legend(title="Member type")) +
         ggtitle("Distribution Comparison of Casual vs Registered Riders")
 }
@@ -70,7 +70,8 @@ daily_counts <- daily_counts %>% pivot_wider(names_from=Member.type, values_from
 ggplot(daily_counts, aes(x=Casual, y=Member, color=workingday)) +
   geom_point() +
   geom_smooth(method=lm) +
-    ggtitle("Comparison of Casual vs Registered Riders on Working and Nonworking Days")
+    ggtitle("Comparison of Casual vs Registered Riders on Working and Nonworking Days") +
+    labs(caption="Data source: Capital Bikeshare")
 ```
 The scatter plot roughly exhibits a linear relationship between casual and registered riders on the weekend, but we cannot tell whether a point occurs on the weekend because the plot has the overplotting issue which means there are many overlapping points that make it difficult to tell where the data lies.
 
@@ -79,7 +80,8 @@ The scatter plot makes clear the separation between the work days and non-work d
 
 ```{r}
 ggplot(daily_counts, aes(x=Casual, y=Member, group=workingday)) + 
-  stat_density_2d(aes(alpha=..level.., fill=workingday), geom="polygon")
+  stat_density_2d(aes(alpha=..level.., fill=workingday), geom="polygon") +
+  labs(caption="Data source: Capital Bikeshare")
 ```
 The kernel density plot suggests that for work days there are significantly more member riders than casual ones but for nonwork days the difference is not as large. It's obviously easier to see the relationship on this plot since the density centers look more clear and therefore the overplotting issue is addressed.
 
@@ -100,7 +102,7 @@ bike %>%
   geom_line() +
   facet_wrap(.~(Day > 15), ncol=1, scales="free_x") +
   ggtitle("Number of riders every hour in Jan 2019") +
-  labs(x="Time", y="Number") +
+  labs(x="Time", y="Number", caption="Data source: Capital Bikeshare") +
   theme(strip.text.x = element_blank(), plot.title = element_text(lineheight=1, face="bold", hjust = 0.5)) +
   scale_color_manual(values = c("skyblue3", "lightpink3"))
 bike = bike %>% select(!time)
@@ -121,6 +123,7 @@ bike %>%
   ggplot(aes(x=Time, y=num)) +
     geom_bar(stat="identity", fill="steelblue") +
     ylab("Number of riders") +
+    labs(caption="Data source: Capital Bikeshare") +
     ggtitle("Average number of riders each hour") +
     theme(plot.title = element_text(lineheight=1, face="bold", hjust = 0.5)) +
     coord_flip()
@@ -138,6 +141,7 @@ bike %>%
   ggplot(aes(x=Time, y=num)) + 
     geom_bar(stat="identity", fill="steelblue") +
     ggtitle("Average number of two types of riders each hour") +
+    labs(caption="Data source: Capital Bikeshare") +
     theme_grey(13) +
     theme(plot.title = element_text(lineheight=1, face="bold", hjust = 0.5)) +
     coord_flip() +
@@ -170,6 +174,7 @@ ggplot(temp_count,aes(TAVG,num))+
   labs(title="Impact of temperature on number of trips per day",y="average trips per day",x="average temperature (Fahrenheit)")+
   scale_x_continuous(breaks=c(20,30,40,50,60,70,80,90,100))+
   theme_grey(16)+
+  labs(caption="Data source: Capital Bikeshare") +
   theme(plot.title = element_text(face="bold"))
 ```
 
@@ -185,8 +190,10 @@ ggplot(prcp_count,aes(x=PRCP,y=num,color=workdays))+
   geom_point(alpha=0.5)+
   geom_smooth(se = FALSE)+
   facet_wrap(vars(workdays),nrow=1)+
-  labs(title="Impact of rains on workdays versus non-workdays",subtitle="Number of trips on workdays are less affected by raining  ",y="Average trips per day",x=
-         "PRCP(inches)")+
+  labs(title="Impact of rains on workdays versus non-workdays",
+       subtitle="Number of trips on workdays are less affected by raining  ",
+       y="Average trips per day",x="PRCP(inches)", 
+       caption="Data source: Capital Bikeshare")+
     theme_gray(15)+
   theme(plot.title = element_text(face="bold"))
 ```
@@ -204,6 +211,7 @@ ggplot(by_snowfall,aes(x=as_factor(ifsnow),y=number,fill=ifsnow))+
 labs(title="Distribution of daily trip numbers by snow",y="Number of trips",subtitle = "Number of trips daily drops drastically on snowy days",fill="Weather")+
   scale_fill_manual(values=c("#E69F00", "#56B4E9"))+
   theme_grey(16)+
+  labs(caption="Data source: Capital Bikeshare")+
   theme(plot.title = element_text(face="bold"),
         axis.title.x = element_blank())
 ```
@@ -215,5 +223,6 @@ ggplot(by_day[by_day$SNWD!=0,],aes(x=SNWD,y=number))+
   geom_point(aes(color=workdays))+
   labs(title="Impact of snow depth on number of trips",y="Number of trips",subtitle = "Only data on snowy days are included",x="Snow Depth (inches)")+
   theme_grey(16)+
+  labs(caption="Data source: Capital Bikeshare")+
   theme(plot.title = element_text(face="bold"))
 ```
