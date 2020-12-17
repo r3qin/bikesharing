@@ -99,10 +99,10 @@ d3.csv("https://raw.githubusercontent.com/cai0909/data/main/prcp.csv").then(func
     
     svg.append("text")
     .attr("y",margin.top-50)
-    .attr("x",480)
+    .attr("x",350)
     .style('font-size',"25px")
     .style("text-anchor", "middle")
-    .text("Distribution of daily trip counts by snow ")  
+    .text("relationship between daily counts and precipitation ")  
    
 
 });
