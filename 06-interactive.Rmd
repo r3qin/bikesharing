@@ -76,4 +76,4 @@ Since most of the precipitation in the rainy days in DC is less than 1 inches, p
 <svg width="960" height="500" id="part3_svg"></svg>
 <script src="part3.js"></script>
 
-In fact, we found that precipitation has a diminishing marginal effect. Specifically, the change of daily trip counts from 0 (no rain) to 0.1 inches of rain is more significant than that from 0.5 to 0.6 inches. And the correlation between rain and lower ridership is less clear partly because the number of observations is inefficient in our data set.
+In fact, we found that precipitation has a diminishing marginal effect. Specifically, the pattern of change of daily trip counts from 0 (no rain) to 0.1 inches of rain is more obvious than that from 0.5 to 0.6 inches.

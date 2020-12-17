@@ -113,7 +113,7 @@ bike = bike %>% select(!time)
 
 If we look at the graph of the number of riders every hour in Jan 2019, we notice that there is a repeating pattern that the number of riders keep fluctuating every day. Let's take a closer look at the pattern of number of bike riding every day. We want to investigate the average number of bike riding each hour in 2019.
 
-### Average number of riders each hour
+### Daily pattern of bike riding
 ```{r}
 timeline = c("0:00","1:00","2:00","3:00","4:00","5:00","6:00","7:00","8:00",
              "9:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00",
@@ -134,7 +134,7 @@ bike %>%
 
 According to the graph above, it can be observed that the number of riders peaks during rush hours each day. Moreover, the number of riders gradually decreases and achieves its lowest point at 3:00 AM. 
 
-### Average number of two types of riders each hour
+### Difference between patterns of riders
 ```{r}
 bike %>% 
   group_by(Hour, Member.type) %>% 
@@ -159,7 +159,7 @@ When comparing the number of casual and member riders, we notice that the former
 In this part of analysis, let's find out how the weather condition influences the riding behaviors. The data granularity is at the daily level. 
 
 ```{r}
-df<-read.csv("https://raw.githubusercontent.com/cai0909/data/main/data.csv")
+df<-read.csv("https://raw.githubusercontent.com/r3qin/bikesharing/main/data/bike.csv")
 total_sum<-df %>% group_by(Year,Month,Day) %>% summarize(number=sum(num)) 
 day<-df %>% group_by(Year,Month,Day) %>% slice_head(n=1)
 by_day<-day %>% left_join(total_sum,by=c('Year','Month','Day'),keep=FALSE) %>% subset(select=-c(X,Hour,num,Member.type));
@@ -176,16 +176,16 @@ ggplot(temp_count,aes(TAVG,num))+
   geom_col()+
   labs(title="Relationship between temperature and daily trip counts",y="average trips per day",x="average temperature (Fahrenheit)")+
   scale_x_continuous(breaks=c(20,30,40,50,60,70,80,90,100))+
-  theme_grey(16)+
+  theme_grey(15)+
   labs(caption="Data source: Capital Bikeshare") +
   theme(plot.title = element_text(face="bold"))
 ```
 
 The graph below clearly shows that the number of trips ramps up quickly from 0 to 60 degrees, but the relationship between bike rental and temperature becomes weaker in temperatures above 60 degrees. The mode is at around 55 degree, meaning that there is a distinctly high number of bike rentals in that temperature. After some further investigation, we found out that a potential explanation for the unusual spike is that the National cherry blossom festival in DC was at the day for the mode temperature.
 
-### Impact of rain
+### Average daily trips counts with different precipitation
 
-Next, let's visualize the impact of rainy days on the number of trips. 
+Next, let's visualize the relationship between rainy days and the number of trips. 
 
 ```{r}
 prcp_count<- by_day %>% group_by(PRCP,workdays) %>% summarize(num=mean(number));
@@ -193,16 +193,16 @@ ggplot(prcp_count,aes(x=PRCP,y=num,color=workdays))+
   geom_point(alpha=0.5)+
   geom_smooth(se = FALSE)+
   facet_wrap(vars(workdays),nrow=1)+
-  labs(title="Impact of rain on workdays versus non-workdays",
+  labs(title="Average daily trip counts with different precipitation",
        y="Average trips per day",x="PRCP(inches)", 
        caption="Data source: Capital Bikeshare")+
-    theme_gray(15)+
+    theme_gray(14)+
   theme(plot.title = element_text(face="bold"))
 ```
 
 It's counter-intuitive to see that the number of trips is not necessarily less in the rainy days. In fact, we can see a few outliers at the days with extremely heavy rains have a pretty high number of trips. Also, it's interesting to see that the number of trips on workdays are less affected by rains than on weekends. A reasonable guess is that on weekdays people cannot avoid renting bikes for commuting no matter if it is rainy or not.
 
-### Impact of snow
+### Average daily trips counts by snow
 
 Then, we looked into the impact of snow on the number of trips. 
 
@@ -211,9 +211,9 @@ library(forcats)
 by_snowfall<-by_day %>% mutate(ifsnow=if_else(SNOW>0,"Snowy","Not snowy") ) 
 ggplot(by_snowfall,aes(x=as_factor(ifsnow),y=number,fill=ifsnow))+
   geom_boxplot(varwidth=TRUE)+
-labs(title="Distribution of daily trip counts by snow",y="Number of trips",fill="Weather")+
+labs(title="Comparision of daily trip counts by snow",y="Number of trips",fill="Weather")+
   scale_fill_manual(values=c("#E69F00", "#56B4E9"))+
-  theme_grey(16)+
+  theme_grey(14)+
   labs(caption="Data source: Capital Bikeshare")+
   theme(plot.title = element_text(face="bold"),
         axis.title.x = element_blank())
@@ -222,8 +222,8 @@ labs(title="Distribution of daily trip counts by snow",y="Number of trips",fill=
 ```{r}
 ggplot(by_day[by_day$SNWD!=0,],aes(x=SNWD,y=number))+
   geom_point(aes(color=workdays))+
-  labs(title="Relationship between snow depth and daily trip counts",y="Number of trips",x="Snow Depth (inches)")+
-  theme_grey(16)+
+  labs(title="Average daily trip counts with different snowdepth",y="Number of trips",x="Snow Depth (inches)")+
+  theme_grey(14)+
   labs(caption="Data source: Capital Bikeshare")+
   theme(plot.title = element_text(face="bold"))
 ```

@@ -91,17 +91,17 @@
 </ul></li>
 <li class="chapter" data-level="5.2" data-path="results.html"><a href="results.html#part-2"><i class="fa fa-check"></i><b>5.2</b> Part 2</a><ul>
 <li class="chapter" data-level="5.2.1" data-path="results.html"><a href="results.html#number-of-riders-every-hour-in-jan-2019"><i class="fa fa-check"></i><b>5.2.1</b> Number of riders every hour in Jan 2019</a></li>
-<li class="chapter" data-level="5.2.2" data-path="results.html"><a href="results.html#average-number-of-riders-each-hour"><i class="fa fa-check"></i><b>5.2.2</b> Average number of riders each hour</a></li>
-<li class="chapter" data-level="5.2.3" data-path="results.html"><a href="results.html#average-number-of-two-types-of-riders-each-hour"><i class="fa fa-check"></i><b>5.2.3</b> Average number of two types of riders each hour</a></li>
+<li class="chapter" data-level="5.2.2" data-path="results.html"><a href="results.html#daily-pattern-of-bike-riding"><i class="fa fa-check"></i><b>5.2.2</b> Daily pattern of bike riding</a></li>
+<li class="chapter" data-level="5.2.3" data-path="results.html"><a href="results.html#difference-between-patterns-of-riders"><i class="fa fa-check"></i><b>5.2.3</b> Difference between patterns of riders</a></li>
 </ul></li>
 <li class="chapter" data-level="5.3" data-path="results.html"><a href="results.html#part-3"><i class="fa fa-check"></i><b>5.3</b> Part 3</a><ul>
 <li class="chapter" data-level="5.3.1" data-path="results.html"><a href="results.html#average-number-of-trips-per-day-in-different-temperatures"><i class="fa fa-check"></i><b>5.3.1</b> Average number of trips per day in different temperatures</a></li>
-<li class="chapter" data-level="5.3.2" data-path="results.html"><a href="results.html#impact-of-rain"><i class="fa fa-check"></i><b>5.3.2</b> Impact of rain</a></li>
-<li class="chapter" data-level="5.3.3" data-path="results.html"><a href="results.html#impact-of-snow"><i class="fa fa-check"></i><b>5.3.3</b> Impact of snow</a></li>
+<li class="chapter" data-level="5.3.2" data-path="results.html"><a href="results.html#average-daily-trips-counts-with-different-precipitation"><i class="fa fa-check"></i><b>5.3.2</b> Average daily trips counts with different precipitation</a></li>
+<li class="chapter" data-level="5.3.3" data-path="results.html"><a href="results.html#average-daily-trips-counts-by-snow"><i class="fa fa-check"></i><b>5.3.3</b> Average daily trips counts by snow</a></li>
 </ul></li>
 </ul></li>
 <li class="chapter" data-level="6" data-path="interactive-component.html"><a href="interactive-component.html"><i class="fa fa-check"></i><b>6</b> Interactive component</a><ul>
-<li class="chapter" data-level="6.1" data-path="interactive-component.html"><a href="interactive-component.html#daily-pattern-of-bike-riding"><i class="fa fa-check"></i><b>6.1</b> Daily pattern of bike riding</a></li>
+<li class="chapter" data-level="6.1" data-path="interactive-component.html"><a href="interactive-component.html#daily-pattern-of-bike-riding-1"><i class="fa fa-check"></i><b>6.1</b> Daily pattern of bike riding</a></li>
 <li class="chapter" data-level="6.2" data-path="interactive-component.html"><a href="interactive-component.html#weather-effect"><i class="fa fa-check"></i><b>6.2</b> Weather effect</a></li>
 </ul></li>
 <li class="chapter" data-level="7" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>7</b> Conclusion</a></li>
@@ -126,14 +126,17 @@
             <section class="normal" id="section-">
 <div id="data-transformation" class="section level1">
 <h1><span class="header-section-number">Chapter 3</span> Data transformation</h1>
-<p>In our data transformation script, we perform the following steps:
-1. Since all data are <code>.csv</code> files, we load them using the <code>read.csv()</code> function in R.
-2. We drop the unnecessary variables in the bike-sharing data: <code>Duration</code>, <code>Start Station</code>, <code>Rnd Station</code>, and <code>Bike number</code>.
-3. We choose the variable <code>Start Date</code> to represent the occurrence time of the bike riding. It is separated into four date and time variables: <code>Year</code>, <code>Month</code>, <code>Day</code>, and <code>Hour</code>.
-4. For the temperature data, we change the format of the variable <code>DATE</code> to the standard practice <code>YYYY-MM-DD</code>.
-5. We merge the two data sets on the index date variable by using <code>left_join()</code> function in the <code>dplyr</code> package.
-6. We add the variable <code>workdays</code>, which is true if the day is not a holiday or weekend and false otherwise.
-7. Since the size of the data frame is too large with every row representing a single trip, we change the granularity to hour by aggregation over the total count of bike riding trips in each hour of a day. The derived data set is condensed to 16,889 rows with 13 variables:</p>
+<p>In our data transformation script, we perform the following steps:</p>
+<ol style="list-style-type: decimal">
+<li><p>Since all data are <code>.csv</code> files, we load them using the <code>read.csv()</code> function in R.</p></li>
+<li><p>We drop the unnecessary variables in the bike-sharing data: <code>Duration</code>, <code>Start Station</code>, <code>Rnd Station</code>, and <code>Bike number</code>.</p></li>
+<li><p>We choose the variable <code>Start Date</code> to represent the occurrence time of the bike riding. It is separated into four date and time variables: <code>Year</code>, <code>Month</code>, <code>Day</code>, and <code>Hour</code>.</p></li>
+<li><p>For the temperature data, we change the format of the variable <code>DATE</code> to the standard practice <code>YYYY-MM-DD</code>.</p></li>
+<li><p>We merge the two data sets on the index date variable by using <code>left_join()</code> function in the <code>dplyr</code> package.</p></li>
+<li><p>We add the variable <code>workdays</code>, which is true if the day is not a holiday or weekend and false otherwise.</p></li>
+<li><p>Since the size of the data frame is too large with every row representing a single trip, we change the granularity to hour by aggregation over the total count of bike riding trips in each hour of a day.</p></li>
+</ol>
+<p>The derived data set is condensed to 16,889 rows with 13 variables:</p>
 <ul>
 <li>Year - Year of the occurrence of the bike riding, 2019</li>
 <li>Month - Month of the occurrence of the bike riding</li>
